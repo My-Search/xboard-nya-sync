@@ -1,0 +1,481 @@
+机场的登录接口：
+curl ^"https://xboard机场域名/api/v1/passport/auth/login^" ^
+  -H ^"sec-ch-ua-platform: ^\^"Windows^\^"^" ^
+  -H ^"Referer: https://xboard机场域名/sysadmin^" ^
+  -H ^"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36^" ^
+  -H ^"sec-ch-ua: ^\^"Google Chrome^\^";v=^\^"143^\^", ^\^"Chromium^\^";v=^\^"143^\^", ^\^"Not A(Brand^\^";v=^\^"24^\^"^" ^
+  -H ^"Content-Type: application/x-www-form-urlencoded^" ^
+  -H ^"sec-ch-ua-mobile: ?0^" ^
+  --data-raw ^"email=2119299531^%^40qq.com^&password=gkmzjaznX55^"
+登录响应：
+{
+    "status": "success",
+    "message": "操作成功",
+    "data": {
+        "token": "a89797f98837277d0aa11aca39f80331",
+        "is_admin": 1,
+        "auth_data": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwic2Vzc2lvbiI6IjJkOTVhNjFkYjM1ZTdjNjUxOTY2ZjczMTczNzIxZGUyIn0.MVA854iZtnEMjcA75zxwwzdbd1yQPqqIUBN98hnG6QI"
+    },
+    "error": null
+}
+
+机场的获取节点的接口：
+curl ^"https://xboard机场域名/api/v1/sysadmin/server/manage/getNodes^" ^
+  -H ^"accept: */*^" ^
+  -H ^"accept-language: zh-CN,zh;q=0.9,en;q=0.8^" ^
+  -H ^"authorization: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwic2Vzc2lvbiI6IjJkOTVhNjFkYjM1ZTdjNjUxOTY2ZjczMTczNzIxZGUyIn0.MVA854iZtnEMjcA75zxwwzdbd1yQPqqIUBN98hnG6QI^" ^
+  -H ^"cache-control: no-cache^" ^
+  -b ^"TawkConnectionTime=0; twk_uuid_6786454eaf5bfec1dbeb4e04=^%^7B^%^22uuid^%^22^%^3A^%^221.1hHfVEtewwnOnOuSGziwn24RL7qVusVsfXQ8z4SE6Mn0QnNdheLv01KQys9wcrBL0NPd7CehDA8OgyKRb7SEIA5cqIyRuwOji111pHytCQBxAGWQ9XX^%^22^%^2C^%^22version^%^22^%^3A3^%^2C^%^22domain^%^22^%^3A^%^22xboard机场域名^%^22^%^2C^%^22ts^%^22^%^3A1765359328725^%^7D^" ^
+  -H ^"pragma: no-cache^" ^
+  -H ^"priority: u=1, i^" ^
+  -H ^"referer: https://xboard机场域名/sysadmin^" ^
+  -H ^"sec-ch-ua: ^\^"Google Chrome^\^";v=^\^"143^\^", ^\^"Chromium^\^";v=^\^"143^\^", ^\^"Not A(Brand^\^";v=^\^"24^\^"^" ^
+  -H ^"sec-ch-ua-mobile: ?0^" ^
+  -H ^"sec-ch-ua-platform: ^\^"Windows^\^"^" ^
+  -H ^"sec-fetch-dest: empty^" ^
+  -H ^"sec-fetch-mode: cors^" ^
+  -H ^"sec-fetch-site: same-origin^" ^
+  -H ^"user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36^"
+获取节点的响应：
+{
+    "status": "success",
+    "message": "操作成功",
+    "data": [
+        {
+            "id": 39,
+            "group_id": [
+                "1",
+                "2",
+                "3"
+            ],
+            "route_id": null,
+            "parent_id": null,
+            "tags": null,
+            "name": "🇭🇰香港1",
+            "rate": "1",
+            "host": "125.78.88.68",
+            "port": "11001",
+            "server_port": 10001,
+            "cipher": "chacha20-ietf-poly1305",
+            "obfs": null,
+            "obfs_settings": null,
+            "show": 0,
+            "sort": 0,
+            "created_at": 1753958809,
+            "updated_at": 1762174780,
+            "excludes": null,
+            "ips": null,
+            "type": "shadowsocks",
+            "online": 0,
+            "last_check_at": null,
+            "last_push_at": null,
+            "available_status": 0
+        },
+        {
+            "id": 40,
+            "group_id": [
+                "1",
+                "2",
+                "3"
+            ],
+            "route_id": null,
+            "parent_id": null,
+            "tags": null,
+            "name": "🇭🇰香港2",
+            "rate": "1",
+            "host": "125.78.88.68",
+            "port": "11002",
+            "server_port": 10002,
+            "cipher": "chacha20-ietf-poly1305",
+            "obfs": null,
+            "obfs_settings": null,
+            "show": 0,
+            "sort": 1,
+            "created_at": 1753958809,
+            "updated_at": 1762174775,
+            "excludes": null,
+            "ips": null,
+            "type": "shadowsocks",
+            "online": 0,
+            "last_check_at": null,
+            "last_push_at": null,
+            "available_status": 0
+        },
+        {
+            "id": 2,
+            "group_id": [
+                "1",
+                "2",
+                "3"
+            ],
+            "route_id": null,
+            "name": "🇭🇰香港3-hy2",
+            "parent_id": null,
+            "host": "baidu.xboard机场域名",
+            "port": "80",
+            "server_port": 80,
+            "tags": null,
+            "rate": "1",
+            "show": 0,
+            "sort": 2,
+            "up_mbps": 1024,
+            "down_mbps": 1024,
+            "server_name": "baidu.xboard机场域名",
+            "insecure": 0,
+            "created_at": 1755420258,
+            "updated_at": 1761545240,
+            "excludes": null,
+            "ips": null,
+            "alpn": 0,
+            "version": 2,
+            "is_obfs": 0,
+            "type": "hysteria",
+            "online": 0,
+            "last_check_at": null,
+            "last_push_at": null,
+            "available_status": 0
+        },
+        {
+            "id": 37,
+            "group_id": [
+                "1",
+                "2",
+                "3"
+            ],
+            "route_id": null,
+            "parent_id": null,
+            "tags": null,
+            "name": "🇯🇵日本1",
+            "rate": "1",
+            "host": "125.77.160.35",
+            "port": "20001",
+            "server_port": 20001,
+            "cipher": "chacha20-ietf-poly1305",
+            "obfs": null,
+            "obfs_settings": {
+                "host": "www.cloudflare.com"
+            },
+            "show": 1,
+            "sort": 3,
+            "created_at": 1753958267,
+            "updated_at": 1765271395,
+            "excludes": null,
+            "ips": null,
+            "type": "shadowsocks",
+            "online": "1",
+            "last_check_at": "1765359674",
+            "last_push_at": "1765357386",
+            "available_status": 1
+        },
+        {
+            "id": 38,
+            "group_id": [
+                "1",
+                "2",
+                "3"
+            ],
+            "route_id": null,
+            "parent_id": null,
+            "tags": null,
+            "name": "🇯🇵日本2",
+            "rate": "1",
+            "host": "125.77.160.35",
+            "port": "20002",
+            "server_port": 20002,
+            "cipher": "chacha20-ietf-poly1305",
+            "obfs": null,
+            "obfs_settings": {
+                "host": "www.cloudflare.com"
+            },
+            "show": 1,
+            "sort": 4,
+            "created_at": 1753958267,
+            "updated_at": 1765271401,
+            "excludes": null,
+            "ips": null,
+            "type": "shadowsocks",
+            "online": "1",
+            "last_check_at": "1765359629",
+            "last_push_at": "1765357558",
+            "available_status": 1
+        },
+        {
+            "id": 1,
+            "group_id": [
+                "1",
+                "2",
+                "3"
+            ],
+            "route_id": null,
+            "parent_id": null,
+            "tags": null,
+            "name": "🇺🇸美国1",
+            "rate": "1",
+            "host": "125.77.160.35",
+            "port": "30001",
+            "server_port": 30001,
+            "cipher": "chacha20-ietf-poly1305",
+            "obfs": null,
+            "obfs_settings": {
+                "host": "www.cloudflare.com",
+                "path": null
+            },
+            "show": 1,
+            "sort": 5,
+            "created_at": 1736139793,
+            "updated_at": 1765271406,
+            "excludes": null,
+            "ips": null,
+            "type": "shadowsocks",
+            "online": "1",
+            "last_check_at": "1765359660",
+            "last_push_at": "1765357427",
+            "available_status": 1
+        },
+        {
+            "id": 41,
+            "group_id": [
+                "1",
+                "2",
+                "3"
+            ],
+            "route_id": null,
+            "parent_id": null,
+            "tags": null,
+            "name": "🇺🇸美国2",
+            "rate": "1",
+            "host": "125.77.160.35",
+            "port": "30002",
+            "server_port": 30002,
+            "cipher": "chacha20-ietf-poly1305",
+            "obfs": null,
+            "obfs_settings": {
+                "host": "www.cloudflare.com",
+                "path": null
+            },
+            "show": 1,
+            "sort": 6,
+            "created_at": 1736139793,
+            "updated_at": 1765271410,
+            "excludes": null,
+            "ips": null,
+            "type": "shadowsocks",
+            "online": "1",
+            "last_check_at": "1765359660",
+            "last_push_at": "1765357387",
+            "available_status": 1
+        }
+    ],
+    "error": null
+}
+修改节点信息的接口：
+curl ^"https://xboard机场域名/api/v1/sysadmin/server/shadowsocks/save^" ^
+  -H ^"accept: */*^" ^
+  -H ^"accept-language: zh-CN,zh;q=0.9,en;q=0.8^" ^
+  -H ^"authorization: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwic2Vzc2lvbiI6IjJkOTVhNjFkYjM1ZTdjNjUxOTY2ZjczMTczNzIxZGUyIn0.MVA854iZtnEMjcA75zxwwzdbd1yQPqqIUBN98hnG6QI^" ^
+  -H ^"cache-control: no-cache^" ^
+  -H ^"content-type: application/x-www-form-urlencoded^" ^
+  -b ^"TawkConnectionTime=0; twk_uuid_6786454eaf5bfec1dbeb4e04=^%^7B^%^22uuid^%^22^%^3A^%^221.1hHfVEtewwnOnOuSGziwn24RL7qVusVsfXQ8z4SE6Mn0QnNdheLv01KQys9wcrBL0NPd7CehDA8OgyKRb7SEIA5cqIyRuwOji111pHytCQBxAGWQ9XX^%^22^%^2C^%^22version^%^22^%^3A3^%^2C^%^22domain^%^22^%^3A^%^22xboard机场域名^%^22^%^2C^%^22ts^%^22^%^3A1765359328725^%^7D^" ^
+  -H ^"origin: https://xboard机场域名^" ^
+  -H ^"pragma: no-cache^" ^
+  -H ^"priority: u=1, i^" ^
+  -H ^"referer: https://xboard机场域名/sysadmin^" ^
+  -H ^"sec-ch-ua: ^\^"Google Chrome^\^";v=^\^"143^\^", ^\^"Chromium^\^";v=^\^"143^\^", ^\^"Not A(Brand^\^";v=^\^"24^\^"^" ^
+  -H ^"sec-ch-ua-mobile: ?0^" ^
+  -H ^"sec-ch-ua-platform: ^\^"Windows^\^"^" ^
+  -H ^"sec-fetch-dest: empty^" ^
+  -H ^"sec-fetch-mode: cors^" ^
+  -H ^"sec-fetch-site: same-origin^" ^
+  -H ^"user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36^" ^
+  --data-raw ^"id=37^&group_id^[0^]=1^&group_id^[1^]=2^&group_id^[2^]=3^&route_id=^&parent_id=^&tags=^&name=^%^F0^%^9F^%^87^%^AF^%^F0^%^9F^%^87^%^B5^%^E6^%^97^%^A5^%^E6^%^9C^%^AC1^&rate=1^&host=125.77.160.36^&port=20001^&server_port=20001^&cipher=chacha20-ietf-poly1305^&obfs=^&obfs_settings^[host^]=www.cloudflare.com^&show=1^&sort=3^&created_at=1753958267^&updated_at=1765271395^&excludes=^&ips=^&type=shadowsocks^&online=1^&last_check_at=1765359674^&last_push_at=1765357386^&available_status=1^"
+修改节点的响应：
+{
+    "status": "success",
+    "message": "操作成功",
+    "data": true,
+    "error": null
+}
+
+
+
+
+
+
+
+
+
+转发服务的登录：
+curl ^"https://nya转发网站域名/api/v1/auth/login^" ^
+  -H ^"sec-ch-ua-platform: ^\^"Windows^\^"^" ^
+  -H ^"Referer;^" ^
+  -H ^"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36^" ^
+  -H ^"sec-ch-ua: ^\^"Google Chrome^\^";v=^\^"143^\^", ^\^"Chromium^\^";v=^\^"143^\^", ^\^"Not A(Brand^\^";v=^\^"24^\^"^" ^
+  -H ^"Content-Type: text/plain;charset=UTF-8^" ^
+  -H ^"sec-ch-ua-mobile: ?0^" ^
+  --data-raw ^"^{^\^"username^\^":^\^"manzhuangjie^@gmail.com^\^",^\^"password^\^":^\^"gkmzjaznX55^\^"^}^"
+登录的响应：
+{"code":0,"data":"f9f0e0a8-f957-47f6-9ff1-7b4789b803d7","msg":"登录成功"}
+
+查看转发规则列表的接口（不含转发地址，转发地址在组里）：
+curl ^"https://nya转发网站域名/api/v1/user/forward?page=1^&size=10^" ^
+  -H ^"sec-ch-ua-platform: ^\^"Windows^\^"^" ^
+  -H ^"Authorization: f9f0e0a8-f957-47f6-9ff1-7b4789b803d7^" ^
+  -H ^"Referer;^" ^
+  -H ^"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36^" ^
+  -H ^"sec-ch-ua: ^\^"Google Chrome^\^";v=^\^"143^\^", ^\^"Chromium^\^";v=^\^"143^\^", ^\^"Not A(Brand^\^";v=^\^"24^\^"^" ^
+  -H ^"sec-ch-ua-mobile: ?0^"
+ 
+查看转发规则列表的响应：
+{
+    "code": 0,
+    "data": [
+        {
+            "id": 8410,
+            "name": "美国02",
+            "uid": 1444,
+            "listen_port": 30002,
+            "device_group_in": 235,
+            "device_group_out": 290,
+            "traffic_used": 59409514,
+            "config": "{\"dest\":[\"192.3.250.100:30002\"]}",
+            "status": "ForwardRuleStatus_Normal",
+            "display_updated_at": "2025-12-08 17:30:18 CST"
+        },
+        {
+            "id": 3864,
+            "name": "香港1",
+            "uid": 1444,
+            "listen_port": 11001,
+            "device_group_in": 235,
+            "device_group_out": 290,
+            "traffic_used": 75298740840,
+            "config": "{\"dest\":[\"91.103.122.93:10001\"]}",
+            "status": "ForwardRuleStatus_Normal",
+            "display_updated_at": "2025-11-03 20:59:12 CST"
+        },
+        {
+            "id": 3863,
+            "name": "日本02",
+            "uid": 1444,
+            "listen_port": 20002,
+            "device_group_in": 235,
+            "device_group_out": 290,
+            "traffic_used": 31721776504,
+            "config": "{\"dest\":[\"47.79.42.155:20002\"]}",
+            "status": "ForwardRuleStatus_Normal",
+            "display_updated_at": "2025-10-18 20:42:20 CST"
+        },
+        {
+            "id": 3862,
+            "name": "日本01",
+            "uid": 1444,
+            "listen_port": 20001,
+            "device_group_in": 235,
+            "device_group_out": 290,
+            "traffic_used": 49184319697,
+            "config": "{\"dest\":[\"47.79.42.155:20001\"]}",
+            "status": "ForwardRuleStatus_Normal",
+            "display_updated_at": "2025-10-18 20:42:20 CST"
+        },
+        {
+            "id": 3860,
+            "name": "美国01",
+            "uid": 1444,
+            "listen_port": 30001,
+            "device_group_in": 235,
+            "device_group_out": 290,
+            "traffic_used": 16808306696,
+            "config": "{\"dest\":[\"192.3.250.100:30001\"]}",
+            "status": "ForwardRuleStatus_Normal",
+            "display_updated_at": "2025-10-18 20:42:20 CST"
+        }
+    ],
+    "count": 5
+}
+组的接口（与规则的device_group_in与组的id关联，组的connect_host.split("\n")[0]就是转发的入口）：
+curl ^"https://nya转发网站域名/api/v1/user/devicegroup^" ^
+  -H ^"accept: */*^" ^
+  -H ^"accept-language: zh-CN,zh;q=0.9,en;q=0.8^" ^
+  -H ^"authorization: 8ee1d129-27dd-4835-af00-010557851c54^" ^
+  -H ^"cache-control: no-cache^" ^
+  -H ^"pragma: no-cache^" ^
+  -H ^"priority: u=1, i^" ^
+  -H ^"sec-ch-ua: ^\^"Google Chrome^\^";v=^\^"143^\^", ^\^"Chromium^\^";v=^\^"143^\^", ^\^"Not A(Brand^\^";v=^\^"24^\^"^" ^
+  -H ^"sec-ch-ua-mobile: ?0^" ^
+  -H ^"sec-ch-ua-platform: ^\^"Windows^\^"^" ^
+  -H ^"sec-fetch-dest: empty^" ^
+  -H ^"sec-fetch-mode: cors^" ^
+  -H ^"sec-fetch-site: same-origin^" ^
+  -H ^"user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36^"
+
+device_group_in列表查询接口响应（其中下面connect_host是转发连接的入口，有多个，用"\n"隔开，取第一个）：
+{
+    "code": 0,
+    "data": [
+        {
+            "id": 374,
+            "name": "IEPL3",
+            "type": "DeviceGroupType_Inbound",
+            "ratio": "0.2",
+            "traffic_used": 20935016311628,
+            "connect_host": "103.181.165.140\n售后群 https://t.me/+3jFIG5VWu245MGE5 有问题请进群",
+            "port_range": "10000-50000",
+            "allowed_out": "381,禁止单端",
+            "config": "{\"blocked_protocol\":[\"socks\",\"http\",\"tls\"],\"udp_smart_bind\":true}",
+            "show_order": 9,
+            "display_num": 1
+        },
+        {
+            "id": 381,
+            "name": "IEPL3-专用出口",
+            "type": "DeviceGroupType_OutboundBySite",
+            "ratio": "0",
+            "traffic_used": 20989084355106,
+            "allowed_in": "374",
+            "show_order": 10,
+            "display_num": 1,
+            "display_protocol": "ws"
+        },
+        {
+            "id": 235,
+            "name": "IEPL2-高防",
+            "type": "DeviceGroupType_Inbound",
+            "ratio": "1",
+            "traffic_used": 365840552121561,
+            "connect_host": "125.77.160.49\n售后群 https://t.me/+Bovi7TgE-URmNDhh 有问题请进群",
+            "port_range": "10000-50000",
+            "allowed_out": "290,171,禁止单端",
+            "config": "{\"blocked_protocol\":[\"socks\",\"http\",\"tls\"]}",
+            "show_order": 11,
+            "display_num": 1
+        },
+        {
+            "id": 290,
+            "name": "IEPL香港出口",
+            "type": "DeviceGroupType_OutboundBySite",
+            "ratio": "0",
+            "traffic_used": 338664447392714,
+            "down_sec": 20,
+            "fallback_group": 348,
+            "allowed_in": "235,374",
+            "show_order": 13,
+            "display_num": 1,
+            "display_protocol": "ws"
+        },
+        {
+            "id": 348,
+            "name": "IEPL-香港出口-Backup",
+            "type": "DeviceGroupType_OutboundBySite",
+            "ratio": "0",
+            "traffic_used": 1416006448090,
+            "down_sec": 20,
+            "fallback_group": 171,
+            "allowed_in": "235,374",
+            "show_order": 14,
+            "hide_status": 1,
+            "display_num": 2,
+            "display_protocol": "ws"
+        }
+    ],
+    "msg": ""
+}
