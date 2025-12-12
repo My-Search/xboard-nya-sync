@@ -4,22 +4,22 @@
 # 配置与基础变量
 # ==========================================
 
-# 获取脚本真实物理路径 (解决软链接导致找不到配置文件的问题)
+# 获取脚本真实物理路径
 SOURCE="$0"
-while [ -h "$SOURCE" ]; do # 如果是软链接，则循环追踪
+while [ -h "$SOURCE" ]; do
     DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
     SOURCE="$(readlink "$SOURCE")"
-    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # 如果是相对路径链接，转换为绝对路径
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 BASE_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 # 脚本文件名与相关配置
-SCRIPT_NAME=$(basename "$SOURCE") # 获取真实文件名
+SCRIPT_NAME=$(basename "$SOURCE")
 CONFIG_FILE="$BASE_DIR/config.conf"
 PID_FILE="$BASE_DIR/ip-sync.pid"
 SERVICE_NAME="ip-sync"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-LINK_PATH="/usr/bin/ip-sync" # 全局命令路径
+LINK_PATH="/usr/bin/ip-sync"
 
 # 检查依赖
 if ! command -v jq &> /dev/null; then
@@ -32,7 +32,6 @@ load_config() {
     if [ -f "$CONFIG_FILE" ]; then
         source "$CONFIG_FILE"
     else
-        # 如果是 run_loop 模式且没有配置文件，则无法继续
         if [ "$1" == "force" ]; then
              echo "错误: 找不到配置文件 $CONFIG_FILE"
              exit 1
@@ -44,9 +43,26 @@ load_config() {
 log() {
     local msg="$1"
     local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
-    # 如果 Log_File 变量未在配置文件定义，默认为同级目录下的 ip-sync.log
     local log_target="${Log_File:-$BASE_DIR/ip-sync.log}"
     echo "[$timestamp] $msg" >> "$log_target"
+}
+
+# [新增] 日志清理函数：保留最近 N 行
+clean_log() {
+    local log_target="${Log_File:-$BASE_DIR/ip-sync.log}"
+    local max_lines="${Log_Max_Lines:-0}" # 默认为 0 (不限制)
+
+    # 如果配置了最大行数且日志文件存在
+    if [[ "$max_lines" -gt 0 ]] && [ -f "$log_target" ]; then
+        # 计算当前行数
+        local current_lines=$(wc -l < "$log_target")
+        
+        # 如果行数超出限制，则保留最近的 max_lines 行
+        if [ "$current_lines" -gt "$max_lines" ]; then
+            # 使用临时文件进行截断操作
+            tail -n "$max_lines" "$log_target" > "$log_target.tmp" && mv "$log_target.tmp" "$log_target"
+        fi
+    fi
 }
 
 # ==========================================
@@ -86,12 +102,11 @@ login_forward() {
     return 0
 }
 
-# 3. 获取转发入口IP映射 (已修正)
+# 3. 获取转发入口IP映射
 get_forward_groups() {
     local response=$(curl -s "${Forward_Url}/api/v1/user/devicegroup" \
         -H "Authorization: ${FORWARD_TOKEN}")
     
-    # 修正逻辑：使用 jq 的 split 处理换行符，提取 connect_host 的第一行作为 IP
     echo "$response" | jq -r '
         .data[] 
         | select(.connect_host != null) 
@@ -189,7 +204,6 @@ do_sync_task() {
             continue
         fi
 
-        # 简单的名称匹配逻辑
         local matched_rule=$(echo "$forward_rules_json" | jq -c --arg nname "$node_name" '.data[] | select(.name | contains($nname))' | head -n 1)
 
         if [ -n "$matched_rule" ]; then
@@ -222,7 +236,13 @@ run_loop() {
     log "服务启动，PID: $$"
     while true; do
         load_config
+        
+        # 执行同步任务
         do_sync_task
+        
+        # [新增] 检查并清理日志
+        clean_log
+
         sleep "${Check_Interval:-60}"
     done
 }
