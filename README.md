@@ -26,6 +26,7 @@
 ```bash
 sudo sh -c '(DIR=/opt/ip-sync; mkdir -p "$DIR" && curl -fsSL -o "$DIR/xboard-nya-sync.sh" https://raw.githubusercontent.com/My-Search/xboard-nya-sync/refs/heads/master/xboard-nya-sync.sh && curl -fsSL -o "$DIR/config.conf" https://raw.githubusercontent.com/My-Search/xboard-nya-sync/refs/heads/master/config.conf && chmod +x "$DIR/xboard-nya-sync.sh" && "$DIR/xboard-nya-sync.sh")'
 ```
+> 简要使用流程：在服务器上运行上面命令，选择"安装服务"，然后"编辑配置"，配置`cf token`、`机场的配置`、`nyanpass面板类型的转发平台-套餐用户登录信息配置`。最后请确保转发规则名包含机场的节点名进行关联即可，会自动配置检查配置机场的host与port（如果host是域名，请确保cf已经管理了该域名，会自动修改或创建对应的域名-转发入口ip 映射关系）。
 
 ### 安装步骤
 
