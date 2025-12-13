@@ -22,10 +22,12 @@ SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 LINK_PATH="/usr/bin/ip-sync"
 
 # 检查依赖
-if ! command -v jq &> /dev/null; then
-    echo "错误: 未找到 jq 命令。请先安装 jq (例如: apt-get install jq 或 yum install jq)"
-    exit 1
-fi
+for cmd in jq curl ping; do
+    if ! command -v $cmd &> /dev/null; then
+        echo "错误: 未找到 $cmd 命令。请先安装它 (例如: apt-get install $cmd)"
+        exit 1
+    fi
+done
 
 # 加载配置函数
 load_config() {
@@ -47,20 +49,153 @@ log() {
     echo "[$timestamp] $msg" >> "$log_target"
 }
 
-# [新增] 日志清理函数：保留最近 N 行
+# 日志清理函数：保留最近 N 行
 clean_log() {
     local log_target="${Log_File:-$BASE_DIR/ip-sync.log}"
-    local max_lines="${Log_Max_Lines:-0}" # 默认为 0 (不限制)
+    local max_lines="${Log_Max_Lines:-0}" 
 
-    # 如果配置了最大行数且日志文件存在
     if [[ "$max_lines" -gt 0 ]] && [ -f "$log_target" ]; then
-        # 计算当前行数
         local current_lines=$(wc -l < "$log_target")
-        
-        # 如果行数超出限制，则保留最近的 max_lines 行
         if [ "$current_lines" -gt "$max_lines" ]; then
-            # 使用临时文件进行截断操作
             tail -n "$max_lines" "$log_target" > "$log_target.tmp" && mv "$log_target.tmp" "$log_target"
+        fi
+    fi
+}
+
+# 判断字符串是否为 IP 地址
+is_ip() {
+    if [[ $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 获取域名的当前解析 IP (使用 ping - 本地 DNS)
+# 作为 CF API 失败时的备用方案
+get_domain_ip() {
+    local domain=$1
+    # 尝试 ping 1 次，超时 2 秒
+    local ping_res=$(ping -c 1 -W 2 "$domain" 2>/dev/null | head -n 1)
+    # 提取括号内的 IP
+    local ip=$(echo "$ping_res" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+    echo "$ip"
+}
+
+# ==========================================
+# Cloudflare API 相关逻辑
+# ==========================================
+
+# 递归查找 Zone ID
+# 输入: a.b.example.com -> 尝试查找 a.b.example.com -> b.example.com -> example.com
+get_cf_zone_id() {
+    local domain=$1
+    local token=$2
+    local current_domain=$domain
+    
+    while [[ "$current_domain" == *"."* ]]; do
+        local response=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=$current_domain" \
+              -H "Authorization: Bearer $token" \
+              -H "Content-Type: application/json")
+        
+        local zone_id=$(echo "$response" | jq -r '.result[0].id // empty')
+        
+        if [ -n "$zone_id" ]; then
+            echo "$zone_id"
+            return 0
+        fi
+        
+        # 去掉最左边的一段，继续尝试
+        current_domain=${current_domain#*.}
+    done
+    
+    return 1
+}
+
+# 直接从 Cloudflare API 获取域名配置的 IP
+# 避免 DNS 传播延迟导致的获取旧 IP 问题
+get_cf_record_ip() {
+    local domain=$1
+    local token=$2
+
+    if [ -z "$token" ]; then
+        return 1
+    fi
+
+    # 1. 获取 Zone ID (复用现有函数)
+    local zone_id=$(get_cf_zone_id "$domain" "$token")
+    if [ -z "$zone_id" ]; then
+        # 找不到 Zone ID，说明该域名不在此 CF 账号下
+        return 1
+    fi
+
+    # 2. 获取 A 记录的 Content (IP)
+    local record_res=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records?name=$domain&type=A" \
+        -H "Authorization: Bearer $token" \
+        -H "Content-Type: application/json")
+    
+    local ip=$(echo "$record_res" | jq -r '.result[0].content // empty')
+    
+    echo "$ip"
+}
+
+# 更新 Cloudflare DNS (核心修改部分)
+update_cf_dns() {
+    local domain=$1
+    local new_ip=$2 # 这里的 new_ip 应当是转发的入口IP
+    
+    if [ -z "$CF_Token" ]; then
+        log "Error: 检测到域名 [$domain] 需要更新，但未配置 CF_Token"
+        return 1
+    fi
+
+    # 1. 获取 Zone ID
+    local zone_id=$(get_cf_zone_id "$domain" "$CF_Token")
+    if [ -z "$zone_id" ]; then
+        log "Error: 无法在 Cloudflare 找到域名 [$domain] 对应的 Zone ID，请检查 Token 权限或域名归属。"
+        return 1
+    fi
+
+    # 2. 获取 DNS 记录 ID (只查找 A 记录)
+    local record_res=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records?name=$domain&type=A" \
+        -H "Authorization: Bearer $CF_Token" \
+        -H "Content-Type: application/json")
+    
+    local record_id=$(echo "$record_res" | jq -r '.result[0].id // empty')
+    
+    # 获取当前的代理状态，如果记录不存在，默认为 false
+    local current_proxied=$(echo "$record_res" | jq -r '.result[0].proxied // false')
+
+    if [ -z "$record_id" ]; then
+        # ==========================================
+        # 记录不存在，执行创建逻辑 (POST)
+        # ==========================================
+        log "Info: CF 记录不存在，正在创建: [$domain] -> [$new_ip]"
+        
+        # 新建记录强制不走代理 (proxied: false)，除非你有特殊需求改为 true
+        local create_res=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records" \
+            -H "Authorization: Bearer $CF_Token" \
+            -H "Content-Type: application/json" \
+            --data "{\"type\":\"A\",\"name\":\"$domain\",\"content\":\"$new_ip\",\"ttl\":1,\"proxied\":false}")
+        
+        if [[ $(echo "$create_res" | jq -r '.success') == "true" ]]; then
+            log "Success: Cloudflare 记录 [$domain] 创建成功 -> $new_ip"
+        else
+            log "Fail: Cloudflare 创建失败 - $(echo "$create_res" | jq -r '.errors[0].message')"
+        fi
+    else
+        # ==========================================
+        # 记录存在，执行更新逻辑 (PUT)
+        # ==========================================
+        local update_res=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$record_id" \
+            -H "Authorization: Bearer $CF_Token" \
+            -H "Content-Type: application/json" \
+            --data "{\"type\":\"A\",\"name\":\"$domain\",\"content\":\"$new_ip\",\"ttl\":1,\"proxied\":$current_proxied}")
+            
+        if [[ $(echo "$update_res" | jq -r '.success') == "true" ]]; then
+            log "Success: Cloudflare 记录 [$domain] 更新成功 -> $new_ip (Zone: $zone_id)"
+        else
+            log "Fail: Cloudflare 更新失败 - $(echo "$update_res" | jq -r '.errors[0].message')"
         fi
     fi
 }
@@ -104,6 +239,7 @@ login_forward() {
 
 # 3. 获取转发入口IP映射
 get_forward_groups() {
+    # 这一步获取的是转发服务器的入口地址(connect_host)
     local response=$(curl -s "${Forward_Url}/api/v1/user/devicegroup" \
         -H "Authorization: ${FORWARD_TOKEN}")
     
@@ -114,7 +250,7 @@ get_forward_groups() {
     ' > "$BASE_DIR/forward_groups.map"
 }
 
-# 4. 更新机场节点
+# 4. 更新机场节点 (仅 IP 变更或端口变更时使用)
 update_airport_node() {
     local node_json="$1"
     local new_host="$2"
@@ -167,7 +303,7 @@ update_airport_node() {
     
     local status=$(echo "$update_res" | jq -r '.status // "fail"')
     if [ "$status" == "success" ]; then
-        log "Success: 节点 [$name] 更新成功。"
+        log "Success: 节点 [$name] (ID:$id) 已推送到机场 -> Host: $new_host, Port: $new_port"
     else
         log "Fail: 节点 [$name] 更新失败 - $(echo "$update_res" | jq -r '.message')"
     fi
@@ -200,16 +336,20 @@ do_sync_task() {
         local node_port=$(echo "$node" | jq -r '.port')
         local node_type=$(echo "$node" | jq -r '.type')
 
+        # 只处理 Shadowsocks 类型
         if [ "$node_type" != "shadowsocks" ]; then
             continue
         fi
 
+        # 匹配规则：通过节点名称包含关系查找转发规则
         local matched_rule=$(echo "$forward_rules_json" | jq -c --arg nname "$node_name" '.data[] | select(.name | contains($nname))' | head -n 1)
 
         if [ -n "$matched_rule" ]; then
             local rule_name=$(echo "$matched_rule" | jq -r '.name')
             local group_in=$(echo "$matched_rule" | jq -r '.device_group_in')
             local listen_port=$(echo "$matched_rule" | jq -r '.listen_port')
+            
+            # forward_ip 是转发入口IP（中转机的IP），这就是我们要做对比和同步的标准IP
             local forward_ip="${GROUP_IP_MAP[$group_in]}"
 
             if [ -z "$forward_ip" ]; then
@@ -217,9 +357,48 @@ do_sync_task() {
                 continue
             fi
 
-            if [ "$node_host" != "$forward_ip" ] || [ "$node_port" != "$listen_port" ]; then
-                log "发现变更: 节点 [$node_name] ($node_host:$node_port) -> 转发 [$rule_name] ($forward_ip:$listen_port)"
-                update_airport_node "$node" "$forward_ip" "$listen_port"
+            # ==== 核心逻辑分叉 ====
+            if is_ip "$node_host"; then
+                # 场景 A: 机场节点地址是 IP
+                # 逻辑：直接对比 IP 是否一致，不一致则把机场节点的 Host 改为 forward_ip
+                if [ "$node_host" != "$forward_ip" ] || [ "$node_port" != "$listen_port" ]; then
+                    log "变更检测(IP模式): 节点 [$node_name] ($node_host) -> 转发 ($forward_ip)"
+                    update_airport_node "$node" "$forward_ip" "$listen_port"
+                fi
+            else
+                # 场景 B: 机场节点地址是域名
+                local current_domain_ip=""
+                
+                # 逻辑 1: 优先尝试从 Cloudflare API 获取真实的 A 记录 IP
+                if [ -n "$CF_Token" ]; then
+                    current_domain_ip=$(get_cf_record_ip "$node_host" "$CF_Token")
+                fi
+
+                # 逻辑 2: 如果 CF 获取失败（域名不在 CF 或 Token 错误），回退到本地 Ping 解析
+                if [ -z "$current_domain_ip" ]; then
+                    current_domain_ip=$(get_domain_ip "$node_host")
+                fi
+                
+                # 逻辑 3: 检查端口是否变更 (端口必须同步)
+                if [ "$node_port" != "$listen_port" ]; then
+                    log "变更检测(域名模式-端口): 节点 [$node_name] 端口 $node_port -> $listen_port"
+                    # 注意：这里第二个参数传入 "$node_host"，即保持原来的域名字符串不变，只更新端口
+                    update_airport_node "$node" "$node_host" "$listen_port"
+                fi
+
+                # 逻辑 4: 检查域名解析 IP 是否与转发入口 IP (forward_ip) 一致
+                if [ -z "$current_domain_ip" ]; then
+                    # 关键修改：如果解析不到 IP，说明记录不存在或解析失效，直接调用 CF 更新(创建)
+                    log "Info: 域名 [$node_host] 未解析到 IP (记录可能不存在)，正在请求创建并指向 [$forward_ip]..."
+                    update_cf_dns "$node_host" "$forward_ip"
+                elif [ "$current_domain_ip" != "$forward_ip" ]; then
+                    log "变更检测(域名模式-DNS): 域名 [$node_host] 当前解析($current_domain_ip) != 转发入口($forward_ip)"
+                    # 修改 Cloudflare DNS，将域名指向转发入口 IP
+                    update_cf_dns "$node_host" "$forward_ip"
+                else
+                    # IP 一致，无需操作
+                    :
+                fi
             fi
         fi
     done
@@ -240,7 +419,7 @@ run_loop() {
         # 执行同步任务
         do_sync_task
         
-        # [新增] 检查并清理日志
+        # 检查并清理日志
         clean_log
 
         sleep "${Check_Interval:-60}"
