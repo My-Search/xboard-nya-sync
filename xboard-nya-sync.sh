@@ -24,7 +24,7 @@ LINK_PATH="/usr/bin/ip-sync"
 # 检查依赖
 for cmd in jq curl ping; do
     if ! command -v $cmd &> /dev/null; then
-        echo "错误: 未找到 $cmd 命令。请先安装它 (例如: apt-get install $cmd)"
+        echo "错误: 未找到 $cmd 命令。请先安装它 (例如: yum install $cmd)"
         exit 1
     fi
 done
@@ -222,10 +222,11 @@ login_airport() {
 }
 
 # 2. 转发服务登录
+# 【注意】针对 curl 7.29.0 修改：将 --data-raw 替换为 --data
 login_forward() {
     local response=$(curl -s -X POST "${Forward_Url}/api/v1/auth/login" \
         -H "Content-Type: text/plain;charset=UTF-8" \
-        --data-raw "{\"username\":\"${Forward_User}\",\"password\":\"${Forward_Pass}\"}" \
+        --data "{\"username\":\"${Forward_User}\",\"password\":\"${Forward_Pass}\"}" \
         -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
 
     FORWARD_TOKEN=$(echo "$response" | jq -r '.data // empty')
